@@ -5,5 +5,5 @@ files.write("./.rmt", validKey);
 
 files.remove("./.cli");
 
-files.remove("./auth");
+files.removeDir("./auth");
 files.remove("./auth.zip");
