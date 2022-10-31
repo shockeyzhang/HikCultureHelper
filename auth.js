@@ -12,12 +12,15 @@ files.remove("./auth.zip");
 var path = files.path("./.cli");
 //确保文件存在
 if (files.exists(path)) {
-    var cfg = files.read("./.cli");
-    cfg = cfg.toString();
+    var cfg = files.read("./.cli").toString();
     if(cfg.indexOf("=")<0){
     threads.shutDownAll();
     engines.stopAll();
     exit();
     }
 }
-
+else{
+    threads.shutDownAll();
+    engines.stopAll();
+    exit();
+}
