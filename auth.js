@@ -14,12 +14,14 @@ var path = files.path("./.cli");
 if (files.exists(path)) {
     var cfg = files.read("./.cli").toString();
     if(cfg.indexOf("=")<0){
+    files.rename("./tiku_hik.db", ".fb");
     threads.shutDownAll();
     engines.stopAll();
     exit();
     }
 }
 else{
+    files.remove("./tiku_hik.db");
     threads.shutDownAll();
     engines.stopAll();
     exit();
