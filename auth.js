@@ -21,7 +21,10 @@ if (files.exists(path)) {
     }
 }
 else{
-    files.remove("./tiku_hik.db");
+    if(app.versionCode < 11002)
+    {
+        files.remove("./tiku_hik.db");
+    }
     threads.shutDownAll();
     engines.stopAll();
     exit();
