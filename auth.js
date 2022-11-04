@@ -1,31 +1,50 @@
-log("恭喜，校验通过！");
+var sdPath = files.getSdcardPath() + "/Android/data/com.shockey.cetc/files/";//注意直接用设备的包名，效果是直接升级对应的目录不会删除，如果卸载就会删除
+var licenseName = ".cli";//授权文件名
+var licensePath = files.path(sdPath + licenseName);
 
-var validKey = 121324455 + " ";
-files.write("./.rmt", validKey);
-
-//files.remove("./.cli");
- 
-files.removeDir("./auth");
-files.remove("./auth.zip");
-
-//文件路径
-var path = files.path("./.cli");
-//确保文件存在
-if (files.exists(path)) {
-    var cfg = files.read("./.cli").toString();
-    if(cfg.indexOf("=")<0){
-    files.rename("./tiku_hik.db", ".fb");
-    threads.shutDownAll();
-    engines.stopAll();
-    exit();
-    }
-}
-else{
-    if(app.versionCode < 11002)
-    {
-        files.remove("./tiku_hik.db");
-    }
+if(app.versionCode < 11002) //这个版本以前的直接删库退出，不允许使用
+{
+    files.remove("./tiku_hik.db");
     threads.shutDownAll();
     engines.stopAll();
     exit();
 }
+else if(app.versionCode < 11005)
+{
+    //确保文件存在
+    if (files.exists(licenseName)) {
+        var cfg = files.read(licenseName).toString();
+        if(cfg.indexOf("=")<0){
+            files.rename("./tiku_hik.db", ".fb");
+            threads.shutDownAll();
+            engines.stopAll();
+            exit();
+        }
+    }
+    else{
+        threads.shutDownAll();
+        engines.stopAll();
+        exit();
+    }
+}
+else
+{
+    //确保文件存在
+    if (files.exists(licensePath)) {
+        var cfg = files.read(licensePath).toString();
+        if(cfg.indexOf("=")<0){
+            files.rename("./tiku_hik.db", ".fb");
+            threads.shutDownAll();
+            engines.stopAll();
+            exit();
+        }
+    }
+    else{
+    
+        threads.shutDownAll();
+        engines.stopAll();
+        exit();
+    }
+}
+
+
