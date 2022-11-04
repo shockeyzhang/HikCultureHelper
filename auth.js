@@ -2,14 +2,7 @@ var sdPath = files.getSdcardPath() + "/Android/data/com.shockey.cetc/files/";//�
 var licenseName = ".cli";//授权文件名
 var licensePath = files.path(sdPath + licenseName);
 
-if(app.versionCode < 11002) //这个版本以前的直接删库退出，不允许使用
-{
-    files.remove("./tiku_hik.db");
-    threads.shutDownAll();
-    engines.stopAll();
-    exit();
-}
-else if(app.versionCode < 11005)
+if(app.versionCode < 11005)//以前版本路径在当前目录
 {
     //确保文件存在
     if (files.exists(licenseName)) {
@@ -22,6 +15,10 @@ else if(app.versionCode < 11005)
         }
     }
     else{
+        if(app.versionCode < 11002) //这个版本以前的直接删库退出，不允许使用
+        {
+            files.remove("./tiku_hik.db");
+        }
         threads.shutDownAll();
         engines.stopAll();
         exit();
