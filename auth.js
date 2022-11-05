@@ -1,4 +1,4 @@
-var sdPath = files.getSdcardPath() + "/Android/data/com.shockey.cetc/files/";//注意直接用设备的包名，效果是直接升级对应的目录不会删除，如果卸载就会删除
+var sdPath = files.getSdcardPath() + "/shockey/com.shockey.cetc/files/";//注意直接用设备的包名，效果是直接升级对应的目录不会删除，如果卸载就会删除
 var licenseName = ".cli";//授权文件名
 var licensePath = files.path(sdPath + licenseName);
 
