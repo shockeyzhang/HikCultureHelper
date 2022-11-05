@@ -2,8 +2,8 @@
 importClass(android.database.sqlite.SQLiteDatabase);
 importClass(android.net.ConnectivityManager);
 
-let latestAppVer = 11005;
-let latestDbVer = 221105;
+let latestAppVer = 11006;
+let latestDbVer = 221106;
 
 var csvFileName = "db.csv";
 /**
