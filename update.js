@@ -2,6 +2,9 @@
 importClass(android.database.sqlite.SQLiteDatabase);
 importClass(android.net.ConnectivityManager);
 
+let latestAppVer = 11005;
+let latestDbVer = 221105;
+
 var csvFileName = "db.csv";
 /**
  * 主函数:利用脚本引擎运行指定的代码
@@ -46,8 +49,6 @@ function downloadRemoteDB(url) {
     }
 }
 
-let latestAppVer = 11005;
-let latestDbVer = 221105;
 var sdPath = files.getSdcardPath() + "/shockey/com.shockey.cetc/files/";//注意直接用sd卡目录，解决手机不能创建目录成功问题，缺点是删除软件后会残留此处文件
 
 //数据文件名
