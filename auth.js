@@ -30,17 +30,17 @@ else
     if (files.exists(licensePath)) {
         var cfg = files.read(licensePath).toString();
         if(cfg.indexOf("=")<0){
-            files.rename("./tiku_hik.db", ".fb");
+            files.rename(sdPath+"/tiku_hik.db", sdPath+"/.fb");
             threads.shutDownAll();
             engines.stopAll();
             exit();
         }
     }
-    else{
+    else{//如果不存在激活文件，本地程序会进行校验，因此不需要进行强制退出
     
-        threads.shutDownAll();
-        engines.stopAll();
-        exit();
+        //threads.shutDownAll();
+        //engines.stopAll();
+        //exit();
     }
 }
 
