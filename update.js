@@ -2,10 +2,15 @@
 importClass(android.database.sqlite.SQLiteDatabase);
 importClass(android.net.ConnectivityManager);
 
-let latestAppVer = 11006;
-let latestDbVer = 221106;
+let latestAppVer = 11005;
+let latestDbVer = 221105;
 
 var csvFileName = "db.csv";
+var confi = files.read("./config.txt");
+var conf = confi.split(" ");
+
+var updateServer = conf[2];//远程更新服务器选择
+
 /**
  * 主函数:利用脚本引擎运行指定的代码
  */
@@ -48,6 +53,7 @@ function downloadRemoteDB(url) {
         return false;
     }
 }
+
 
 var sdPath = files.getSdcardPath() + "/shockey/com.shockey.cetc/files/";//注意直接用sd卡目录，解决手机不能创建目录成功问题，缺点是删除软件后会残留此处文件
 
@@ -155,7 +161,19 @@ function updateDb()
     //var url = "https://cdn.jsdelivr.net/gh/shockeyzhang/HikCultureHelper/tiku.csv";//远程地址1
     var url = "https://cdn.staticaly.com/gh/shockeyzhang/HikCultureHelper/main/tiku.csv";//远程地址2
     //var url = "https://rawcdn.githack.com/shockeyzhang/HikCultureHelper/main/tiku.csv";//远程地址3 无法访问
-
+    if(updateServer == "1")
+    {
+        url = "https://cdn.jsdelivr.net/gh/shockeyzhang/HikCultureHelper/tiku.csv";//远程地址1
+    }
+    else if(updateServer == "2")
+    {
+        url = "https://cdn.staticaly.com/gh/shockeyzhang/HikCultureHelper/main/tiku.csv";//远程地址2
+    }
+    else
+    {
+        url = "http://ftp6287982.host104.abeiyun.cn/data/files/tiku.csv";//远程地址3 ,阿贝云服务器
+    }
+    
     var updateDialog = dialogs.build({
         title: "正在更新...",
         progress: {
