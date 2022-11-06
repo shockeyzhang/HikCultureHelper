@@ -123,8 +123,9 @@ function insertOrUpdate(sql) {
     if (!isDatabasExist()) {
         console.error("未找到数据库，创建默认数据库");
     }
-    
+
     var db = SQLiteDatabase.openOrCreateDatabase(dbPath, null);
+
     db.execSQL(sql);
     db.close();
     return true;
@@ -144,8 +145,11 @@ function updateTikuVer()
     
     var datetimeStr = y + "-" +m+"-"+d+"_"+h+":"+min+":"+s;
     //toastLog(datetimeStr);
-    var sql = "INSERT INTO tiku (question, answer, type) VALUES ('"+tikuVerInfo+"', '"+datetimeStr+"','"+ latestDbVer +"') " +
-    "ON CONFLICT(question) DO UPDATE SET answer = '" + datetimeStr + "', type = '"+latestDbVer+"'";
+    var sql = "INSERT INTO tiku (question, answer, type) VALUES ('"+tikuVerInfo+"', '"+datetimeStr+"','"+ latestDbVer +"') ";
+    if (device.sdkInt >= 29) { //如果是答案存在，则更新,Android 10以后才支持
+        sql += "ON CONFLICT(question) DO UPDATE SET answer = '" + datetimeStr + "', type = '"+latestDbVer+"'";//发现冲突，更新
+    } 
+    
     //log("sql=%s", sql);
     insertOrUpdate(sql);
 }
@@ -211,6 +215,14 @@ function updateDb()
         var allLine = file.readlines();
         //log("all=%d", allLine.length);
 
+        //Android 10以下的版本，SQLite不支持on conflict关键字，采用直接删库内容，再插入数据的方式更新
+        if(device.sdkInt < 29) 
+        {
+            var db = SQLiteDatabase.openOrCreateDatabase(dbPath, null);
+            db.execSQL("delete from 'tiku'");
+            db.close();
+        }
+
         var content;
         var lineIdx = 0;
         var p = ((lineIdx / allLine.length) * 100);
@@ -257,9 +269,13 @@ function updateDb()
                 val += ")";
 
                 var sql = ins + val;
-                if (content[1].length) { //如果是答案存在，则更新
-                    sql += " ON CONFLICT(question) DO UPDATE SET answer = '" + content[1] + "'";//发现冲突，更新答案
+                if(device.sdkInt >= 29)//Android 10以后才支持ON Confict
+                {
+                    if (content[1].length) { //如果是答案存在，则更新
+                        sql += " ON CONFLICT(question) DO UPDATE SET answer = '" + content[1] + "'";//发现冲突，更新答案
+                    }
                 }
+                
                 //console.log(sql);
                 var ret = insertOrUpdate(sql);//更新题库答案，更新1条记录
 
