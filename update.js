@@ -1,15 +1,52 @@
 //db操作
 importClass(android.database.sqlite.SQLiteDatabase);
 importClass(android.net.ConnectivityManager);
+importClass(java.net.HttpURLConnection);
+importClass(java.net.URL);
+importClass(java.io.File);
+importClass(java.io.FileOutputStream);
 
-let latestAppVer = 11005;
-let latestDbVer = 221105;
+let latestAppVer = 12000;
+let latestDbVer = 221110;
 
 var csvFileName = "db.csv";
 var confi = files.read("./config.txt");
 var conf = confi.split(" ");
 
 var updateServer = conf[2];//远程更新服务器选择
+
+function diwnloadRemotAPP(url, downloadDialog){
+    threads.start(function () {
+        var path = files.getSdcardPath() + "/Download/HikCultureHelper.apk";
+        let apkFile = new File(path);
+        var conn = new URL(url).openConnection();
+        conn.connect();
+        let is = conn.getInputStream();
+        let length = conn.getContentLength();
+        let fos = new FileOutputStream(apkFile);
+        let count = 0;
+        let buffer = java.lang.reflect.Array.newInstance(java.lang.Byte.TYPE, 1024);
+        while (true) {
+            var p = ((count / length) * 100);
+            let numread = is.read(buffer);
+            count += numread;
+            // 下载完成
+            if (numread < 0) {
+                toast("下载完成");
+                downloadDialog.dismiss();
+                downloadDialog = null;
+                break;
+            }
+            // 更新进度条
+            downloadDialog.setProgress(p);
+            fos.write(buffer, 0, numread);
+        }
+        fos.close();
+        is.close();
+        //自动打开进行安装
+        app.viewFile(path);
+    });
+}
 
 /**
  * 主函数:利用脚本引擎运行指定的代码
@@ -18,7 +55,6 @@ function downloadRemoteDB(url) {
     try {
         //console.show()    //打开控制台
         //获取网页状态运行代码
-        //var url = "https://cdn.jsdelivr.net/gh/shockeyzhang/HikCultureHelper/auth.js"//远程地址
         var cm = context.getSystemService(context.CONNECTIVITY_SERVICE);
         var net = cm.getActiveNetworkInfo();
 
@@ -123,15 +159,13 @@ function insertOrUpdate(sql) {
     if (!isDatabasExist()) {
         console.error("未找到数据库，创建默认数据库");
     }
-
+    
     var db = SQLiteDatabase.openOrCreateDatabase(dbPath, null);
-
     db.execSQL(sql);
     db.close();
     return true;
 }
 
-var updateDialog = null;
 
 function updateTikuVer()
 {
@@ -145,26 +179,47 @@ function updateTikuVer()
     
     var datetimeStr = y + "-" +m+"-"+d+"_"+h+":"+min+":"+s;
     //toastLog(datetimeStr);
-    var sql = "INSERT INTO tiku (question, answer, type) VALUES ('"+tikuVerInfo+"', '"+datetimeStr+"','"+ latestDbVer +"') ";
-    if (device.sdkInt >= 29) { //如果是答案存在，则更新,Android 10以后才支持
-        sql += "ON CONFLICT(question) DO UPDATE SET answer = '" + datetimeStr + "', type = '"+latestDbVer+"'";//发现冲突，更新
-    } 
-    
+    var sql = "INSERT INTO tiku (question, answer, type) VALUES ('"+tikuVerInfo+"', '"+datetimeStr+"','"+ latestDbVer +"') " +
+    "ON CONFLICT(question) DO UPDATE SET answer = '" + datetimeStr + "', type = '"+latestDbVer+"'";
     //log("sql=%s", sql);
     insertOrUpdate(sql);
 }
 
 function updateApp()
 {
-    alert("功能开发中……");
+    //下载远程题库
+    var url = "https://cdn.staticaly.com/gh/shockeyzhang/HikCultureHelper/main/new.csv";//远程地址2
+    if(updateServer == "1")
+    {
+        url = "https://cdn.jsdelivr.net/gh/shockeyzhang/HikCultureHelper/new.csv";//远程地址1
+    }
+    else if(updateServer == "2")
+    {
+        url = "https://cdn.staticaly.com/gh/shockeyzhang/HikCultureHelper/main/new.csv";//远程地址2
+    }
+    else
+    {
+        //url = "http://shockey.freeee.ml/HikCultureHelper/files/new.apk";//远程地址3 ,freehost服务器
+        url = "http://ftp6287982.host104.abeiyun.cn/data/files/new.csv";//远程地址3 
+    }
+    
+    var downloadDialog = dialogs.build({
+        title: "正在下载...",
+        progress: {
+            max: 100,
+            showMinMax: true
+        },
+        autoDismiss: false,
+        //cancelable: false
+    }).show();
+  
+    diwnloadRemotAPP(url, downloadDialog);
 }
 
 function updateDb()
 {
     //下载远程题库
-    //var url = "https://cdn.jsdelivr.net/gh/shockeyzhang/HikCultureHelper/tiku.csv";//远程地址1
     var url = "https://cdn.staticaly.com/gh/shockeyzhang/HikCultureHelper/main/tiku.csv";//远程地址2
-    //var url = "https://rawcdn.githack.com/shockeyzhang/HikCultureHelper/main/tiku.csv";//远程地址3 无法访问
     if(updateServer == "1")
     {
         url = "https://cdn.jsdelivr.net/gh/shockeyzhang/HikCultureHelper/tiku.csv";//远程地址1
@@ -175,6 +230,7 @@ function updateDb()
     }
     else
     {
+        //url = "http://shockey.freeee.ml/HikCultureHelper/files/tiku.csv";//远程地址3 ,freehost服务器
         url = "http://ftp6287982.host104.abeiyun.cn/data/files/tiku.csv";//远程地址3 ,阿贝云服务器
     }
     
@@ -214,14 +270,6 @@ function updateDb()
         var file = open(csvFileName, "r");
         var allLine = file.readlines();
         //log("all=%d", allLine.length);
-
-        //Android 10以下的版本，SQLite不支持on conflict关键字，采用直接删库内容，再插入数据的方式更新
-        if(device.sdkInt < 29) 
-        {
-            var db = SQLiteDatabase.openOrCreateDatabase(dbPath, null);
-            db.execSQL("delete from 'tiku'");
-            db.close();
-        }
 
         var content;
         var lineIdx = 0;
@@ -269,13 +317,9 @@ function updateDb()
                 val += ")";
 
                 var sql = ins + val;
-                if(device.sdkInt >= 29)//Android 10以后才支持ON Confict
-                {
-                    if (content[1].length) { //如果是答案存在，则更新
-                        sql += " ON CONFLICT(question) DO UPDATE SET answer = '" + content[1] + "'";//发现冲突，更新答案
-                    }
+                if (content[1].length) { //如果是答案存在，则更新
+                    sql += " ON CONFLICT(question) DO UPDATE SET answer = '" + content[1] + "'";//发现冲突，更新答案
                 }
-                
                 //console.log(sql);
                 var ret = insertOrUpdate(sql);//更新题库答案，更新1条记录
 
@@ -309,6 +353,7 @@ function updateDb()
 
     updateDialog.dismiss();
     updateDialog = null;
+    files.remove(csvFileName);
 }
 
 function checkUpdate()
